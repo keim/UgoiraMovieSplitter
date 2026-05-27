@@ -1,0 +1,2 @@
+# UgoiraMovieSplitter
+Pixiv うごイラ用の連番jpgファイルをmp4ファイルから抽出します。
