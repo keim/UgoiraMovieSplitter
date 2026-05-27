@@ -1,0 +1,6 @@
+fastapi[standard]==0.136.1
+uvicorn==0.47.0
+python-multipart==0.0.29
+imageio-ffmpeg==0.6.0
+numpy==2.4.6
+pillow==12.2.0
