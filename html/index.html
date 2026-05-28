@@ -192,16 +192,16 @@
                     <div class="flex items-center justify-between gap-3">
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">mosaic 1</p>
                         <label class="inline-flex items-center gap-2 text-xs text-slate-600">
-                            <input id="mosaicEnable1" type="checkbox" checked class="h-4 w-4 rounded border-slate-300 text-slate-700 focus:ring-slate-400">
+                            <input id="mosaicEnable" type="checkbox" checked class="h-4 w-4 rounded border-slate-300 text-slate-700 focus:ring-slate-400">
                             Enable
                         </label>
                     </div>
                     <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                        <input id="mosaicX1" type="number" min="0" value="" placeholder="x1" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed">
-                        <input id="mosaicY1" type="number" min="0" value="" placeholder="y1" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed">
-                        <input id="mosaicW1" type="number" min="1" value="" placeholder="w1" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed">
-                        <input id="mosaicH1" type="number" min="1" value="" placeholder="h1" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed">
-                        <input id="mosaicSize1" type="number" min="1" value="5" placeholder="size1" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed">
+                        <input id="mosaicX" type="number" min="0" value="" placeholder="x" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed">
+                        <input id="mosaicY" type="number" min="0" value="" placeholder="y" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed">
+                        <input id="mosaicW" type="number" min="1" value="" placeholder="w" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed">
+                        <input id="mosaicH" type="number" min="1" value="" placeholder="h" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed">
+                        <input id="mosaicSize" type="number" min="1" value="5" placeholder="size" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed">
                     </div>
                 </div>
 
@@ -266,5 +266,13 @@
     <script src="mergeframe.js"></script>
     <script src="mosaic.js"></script>
     <script src="preview.js"></script>
+    <script>
+      setupTabs();
+      setupUpload();
+      setupSplit();
+      setupMergeframe();
+      setupMosaic();
+      setupPreview();
+    </script>
 </body>
 </html>

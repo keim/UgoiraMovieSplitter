@@ -1,32 +1,30 @@
 // --- upload パネル ---
-const movieInput = document.getElementById("movie");
-const uploadButton = document.getElementById("uploadButton");
-const gdriveUrlInput = document.getElementById("gdriveUrlInput");
-const gdriveImportButton = document.getElementById("gdriveImportButton");
-const deleteMovieButton = document.getElementById("deleteMovieButton");
-const uploadedMovieSelect = document.getElementById("uploadedMovieSelect");
-const result = document.getElementById("result");
-const informationPanel = document.getElementById("informationPanel");
-const informationList = document.getElementById("informationList");
-const imageStatusPanel = document.getElementById("imageStatusPanel");
-const imageStatusList = document.getElementById("imageStatusList");
-const preview = document.getElementById("preview");
-const previewPlaceholder = document.getElementById("previewPlaceholder");
-const splitPreview = document.getElementById("splitPreview");
-const splitPreviewPlaceholder = document.getElementById("splitPreviewPlaceholder");
-const splitFrameSeekArea = document.getElementById("splitFrameSeekArea");
-const splitFrameSeekInput = document.getElementById("splitFrameSeekInput");
-const splitSetStartButton = document.getElementById("splitSetStartButton");
-const splitSetEndButton = document.getElementById("splitSetEndButton");
-const splitFrameSeekMax = document.getElementById("splitFrameSeekMax");
-const mergeframeMsecPerFrame = document.getElementById("mergeframeMsecPerFrame");
-const mosaicEnable1 = document.getElementById("mosaicEnable1");
-const mergeframeDisabledHint = document.getElementById("mergeframeDisabledHint");
-const mosaicDisabledHint = document.getElementById("mosaicDisabledHint");
-let currentFps = null;
-let previewObjectUrl = null;
+const _movieInput = document.getElementById("movie");
+const _uploadButton = document.getElementById("uploadButton");
+const _gdriveUrlInput = document.getElementById("gdriveUrlInput");
+const _gdriveImportButton = document.getElementById("gdriveImportButton");
+const _deleteMovieButton = document.getElementById("deleteMovieButton");
+const _uploadedMovieSelect = document.getElementById("uploadedMovieSelect");
+const _result = document.getElementById("result");
+const _informationPanel = document.getElementById("informationPanel");
+const _informationList = document.getElementById("informationList");
+const _imageStatusPanel = document.getElementById("imageStatusPanel");
+const _imageStatusList = document.getElementById("imageStatusList");
+const _preview = document.getElementById("preview");
+const _previewPlaceholder = document.getElementById("previewPlaceholder");
+const _splitPreview = document.getElementById("splitPreview");
+const _splitPreviewPlaceholder = document.getElementById("splitPreviewPlaceholder");
+const _splitFrameSeekArea = document.getElementById("splitFrameSeekArea");
+const _splitFrameSeekInput = document.getElementById("splitFrameSeekInput");
+const _splitSetStartButton = document.getElementById("splitSetStartButton");
+const _splitSetEndButton = document.getElementById("splitSetEndButton");
+const _splitFrameSeekMax = document.getElementById("splitFrameSeekMax");
+const _mergeframeMsecPerFrame = document.getElementById("mergeframeMsecPerFrame");
+const _mergeframeDisabledHint = document.getElementById("mergeframeDisabledHint");
+const _mosaicDisabledHint = document.getElementById("mosaicDisabledHint");
+let _previewObjectUrl = null;
 
-const informationKeys = [
+const _informationKeys = [
   "video_codec",
   "audio_codec",
   "width",
@@ -37,13 +35,13 @@ const informationKeys = [
   "creation_time"
 ];
 
-function clearInformation() {
-  informationList.innerHTML = "";
-  informationPanel.open = false;
-  informationPanel.classList.add("hidden");
+function _clearInformation() {
+  _informationList.innerHTML = "";
+  _informationPanel.open = false;
+  _informationPanel.classList.add("hidden");
 
-  imageStatusList.innerHTML = "";
-  imageStatusPanel.classList.add("hidden");
+  _imageStatusList.innerHTML = "";
+  _imageStatusPanel.classList.add("hidden");
 
   currentFps = null;
   updateMergeframeTimingDisplay();
@@ -52,16 +50,16 @@ function clearInformation() {
 function updateMergeframeTimingDisplay() {
   const mergeCount = Number(document.getElementById("mergeframeFrames")?.value);
   if (!Number.isFinite(mergeCount) || mergeCount <= 0 || !Number.isFinite(currentFps) || currentFps == null || currentFps <= 0) {
-    mergeframeMsecPerFrame.textContent = "-";
+    _mergeframeMsecPerFrame.textContent = "-";
     return;
   }
 
   const msecPerFrame = (mergeCount * 1000) / currentFps;
-  mergeframeMsecPerFrame.textContent = `${msecPerFrame.toFixed(2)} ms`;
+  _mergeframeMsecPerFrame.textContent = `${msecPerFrame.toFixed(2)} ms`;
 }
 
-function renderImageStatus(data) {
-  imageStatusList.innerHTML = "";
+function _renderImageStatus(data) {
+  _imageStatusList.innerHTML = "";
 
   const statusItems = [
     ["split_images", data?.split_images ?? 0],
@@ -85,14 +83,14 @@ function renderImageStatus(data) {
 
     item.appendChild(term);
     item.appendChild(description);
-    imageStatusList.appendChild(item);
+    _imageStatusList.appendChild(item);
   });
 
-  imageStatusPanel.classList.remove("hidden");
+  _imageStatusPanel.classList.remove("hidden");
 }
 
-function renderInformation(information) {
-  informationList.innerHTML = "";
+function _renderInformation(information) {
+  _informationList.innerHTML = "";
 
   const enrichedInformation = { ...(information || {}) };
   const fps = Number(enrichedInformation.fps);
@@ -101,7 +99,7 @@ function renderInformation(information) {
     enrichedInformation.frame_count = Math.round(fps * duration);
   }
 
-  const displayKeys = [...informationKeys, "frame_count"];
+  const displayKeys = [..._informationKeys, "frame_count"];
 
   displayKeys.forEach((key) => {
     const value = enrichedInformation?.[key] ?? "-";
@@ -119,11 +117,11 @@ function renderInformation(information) {
 
     item.appendChild(term);
     item.appendChild(description);
-    informationList.appendChild(item);
+    _informationList.appendChild(item);
   });
 
-  informationPanel.classList.remove("hidden");
-  informationPanel.open = true;
+  _informationPanel.classList.remove("hidden");
+  _informationPanel.open = true;
 
   const frameCount = enrichedInformation.frame_count;
   if (Number.isFinite(fps) && fps > 0) {
@@ -132,94 +130,47 @@ function renderInformation(information) {
   updateMergeframeTimingDisplay();
 }
 
-splitFrameSeekInput.addEventListener("input", () => {
-  if (currentFps == null || !splitPreview.src) return;
-  const frame = Math.max(0, Number(splitFrameSeekInput.value));
-  splitPreview.currentTime = frame / currentFps;
-});
-
-function updateVideoAspectClass(videoElement) {
+function _updateVideoAspectClass(videoElement) {
   const isPortrait = videoElement.videoHeight > videoElement.videoWidth;
   videoElement.classList.toggle("aspect-square", isPortrait);
 }
 
-preview.addEventListener("loadedmetadata", () => updateVideoAspectClass(preview));
-splitPreview.addEventListener("loadedmetadata", () => updateVideoAspectClass(splitPreview));
-
-function syncSplitFrameSeekFromVideo() {
+function _syncSplitFrameSeekFromVideo() {
   if (currentFps == null || !Number.isFinite(currentFps) || currentFps <= 0) return;
-  if (!splitPreview.src) return;
+  if (!_splitPreview.src) return;
 
-  const frame = Math.max(0, Math.round(splitPreview.currentTime * currentFps));
-  splitFrameSeekInput.value = String(frame);
+  const frame = Math.max(0, Math.round(_splitPreview.currentTime * currentFps));
+  _splitFrameSeekInput.value = String(frame);
 }
 
-splitPreview.addEventListener("timeupdate", syncSplitFrameSeekFromVideo);
-splitPreview.addEventListener("seeked", syncSplitFrameSeekFromVideo);
-
-splitSetStartButton.addEventListener("click", () => {
-  const frame = Math.max(0, Number(splitFrameSeekInput.value));
-  document.getElementById("splitStart").value = String(frame);
-});
-
-splitSetEndButton.addEventListener("click", () => {
-  const frame = Math.max(0, Number(splitFrameSeekInput.value));
-  document.getElementById("splitEnd").value = String(frame);
-});
-
-function setSplitPreviewSource(src) {
+function _setSplitPreviewSource(src) {
   if (!src) {
-    splitPreview.removeAttribute("src");
-    splitPreview.classList.add("hidden");
-    splitPreviewPlaceholder.classList.remove("hidden");
-    splitPreviewPlaceholder.textContent = "ターゲットムービーを選択してください";
-    splitFrameSeekArea.classList.add("hidden");
-    splitFrameSeekInput.value = 0;
-    splitFrameSeekMax.textContent = "";
+    _splitPreview.removeAttribute("src");
+    _splitPreview.classList.add("hidden");
+    _splitPreviewPlaceholder.classList.remove("hidden");
+    _splitPreviewPlaceholder.textContent = "ターゲットムービーを選択してください";
+    _splitFrameSeekArea.classList.add("hidden");
+    _splitFrameSeekInput.value = 0;
+    _splitFrameSeekMax.textContent = "";
     return;
   }
 
-  splitPreview.src = src;
-  splitPreview.classList.remove("hidden");
-  splitPreviewPlaceholder.classList.add("hidden");
-  splitPreview.load();
+  _splitPreview.src = src;
+  _splitPreview.classList.remove("hidden");
+  _splitPreviewPlaceholder.classList.add("hidden");
+  _splitPreview.load();
 
   if (currentFps != null && uploadState.frameCount != null) {
-    splitFrameSeekInput.value = 0;
-    splitFrameSeekInput.max = String(uploadState.frameCount - 1);
-    splitFrameSeekMax.textContent = `/ ${uploadState.frameCount - 1}`;
-    splitFrameSeekArea.classList.remove("hidden");
+    _splitFrameSeekInput.value = 0;
+    _splitFrameSeekInput.max = String(uploadState.frameCount - 1);
+    _splitFrameSeekMax.textContent = `/ ${uploadState.frameCount - 1}`;
+    _splitFrameSeekArea.classList.remove("hidden");
   }
 }
 
-movieInput.addEventListener("change", () => {
-  const file = movieInput.files[0];
-  if (previewObjectUrl) {
-    URL.revokeObjectURL(previewObjectUrl);
-    previewObjectUrl = null;
-  }
-  if (!file) {
-    preview.removeAttribute("src");
-    preview.classList.add("hidden");
-    previewPlaceholder.classList.remove("hidden");
-    previewPlaceholder.textContent = "選択してください";
-    setSplitPreviewSource(null);
-    clearInformation();
-    return;
-  }
-
-  previewObjectUrl = URL.createObjectURL(file);
-  preview.src = previewObjectUrl;
-  preview.classList.remove("hidden");
-  previewPlaceholder.classList.add("hidden");
-  preview.load();
-  setSplitPreviewSource(null);
-  clearInformation();
-});
-
-async function renderMovieInfoForFilename(filename) {
+async function _renderMovieInfoForFilename(filename) {
   if (!filename) {
-    clearInformation();
+    _clearInformation();
     return;
   }
 
@@ -232,8 +183,8 @@ async function renderMovieInfoForFilename(filename) {
       throw new Error(data.detail || "failed to load movie info");
     }
 
-    renderInformation(data.information);
-    renderImageStatus(data);
+    _renderInformation(data.information);
+    _renderImageStatus(data);
     const info = data.information || {};
     const fps = Number(info.fps);
     const duration = Number(info.duration);
@@ -267,7 +218,7 @@ async function renderMovieInfoForFilename(filename) {
     updatePanelResultSummaries();
   } catch (error) {
     if (serial !== movieInfoRequestSerial) return;
-    clearInformation();
+    _clearInformation();
     movieStatus = { splitImages: 0, mergedImages: 0, mosaicImages: 0 };
     splitState = { outputDir: null, frameCount: null };
     mergeframeState = { mergedDir: null, outputFrames: null };
@@ -275,21 +226,21 @@ async function renderMovieInfoForFilename(filename) {
     updateSplitPanel();
     updateMosaicPanel();
     updatePanelResultSummaries();
-    setResultMessage(result, `movie info load failed: ${error}`, "error");
+    setResultMessage(_result, `movie info load failed: ${error}`, "error");
   }
 }
 
-function applyUploadResponse(data) {
+function _applyUploadResponse(data) {
   if (data.movie_url) {
-    if (previewObjectUrl) {
-      URL.revokeObjectURL(previewObjectUrl);
-      previewObjectUrl = null;
+    if (_previewObjectUrl) {
+      URL.revokeObjectURL(_previewObjectUrl);
+      _previewObjectUrl = null;
     }
-    preview.src = data.movie_url;
-    preview.classList.remove("hidden");
-    previewPlaceholder.classList.add("hidden");
-    preview.load();
-    setSplitPreviewSource(data.movie_url);
+    _preview.src = data.movie_url;
+    _preview.classList.remove("hidden");
+    _previewPlaceholder.classList.add("hidden");
+    _preview.load();
+    _setSplitPreviewSource(data.movie_url);
   }
   const info = data.information || {};
   const fps = Number(info.fps);
@@ -300,23 +251,23 @@ function applyUploadResponse(data) {
     filename: data.saved_name ?? data.saved_path?.split(/[\\/]/).pop() ?? null,
   };
   if (uploadState.filename) {
-    uploadedMovieSelect.value = uploadState.filename;
+    _uploadedMovieSelect.value = uploadState.filename;
   }
   updateSplitPanel();
-  renderMovieInfoForFilename(uploadState.filename);
-  refreshUploadedMovieList(uploadState.filename, false);
+  _renderMovieInfoForFilename(uploadState.filename);
+  _refreshUploadedMovieList(uploadState.filename, false);
 }
 
-function selectUploadedMovie(filename) {
+function _selectUploadedMovie(filename) {
   if (!filename) return;
 
-  preview.src = `/movies/${encodeURIComponent(filename)}`;
-  preview.classList.remove("hidden");
-  previewPlaceholder.classList.add("hidden");
-  preview.load();
-  setSplitPreviewSource(`/movies/${encodeURIComponent(filename)}`);
+  _preview.src = `/movies/${encodeURIComponent(filename)}`;
+  _preview.classList.remove("hidden");
+  _previewPlaceholder.classList.add("hidden");
+  _preview.load();
+  _setSplitPreviewSource(`/movies/${encodeURIComponent(filename)}`);
 
-  clearInformation();
+  _clearInformation();
   movieStatus = { splitImages: 0, mergedImages: 0, mosaicImages: 0 };
   splitState = { outputDir: null, frameCount: null };
   mergeframeState = { mergedDir: null, outputFrames: null };
@@ -329,12 +280,12 @@ function selectUploadedMovie(filename) {
   updateSplitPanel();
   updateMosaicPanel();
   updatePanelResultSummaries();
-  renderMovieInfoForFilename(filename);
+  _renderMovieInfoForFilename(filename);
   autoSetPlaylistToCurrentMovie();
 }
 
-async function refreshUploadedMovieList(selectedFilename = null, applySelection = true) {
-  const previousValue = selectedFilename ?? uploadedMovieSelect.value;
+async function _refreshUploadedMovieList(selectedFilename = null, applySelection = true) {
+  const previousValue = selectedFilename ?? _uploadedMovieSelect.value;
   try {
     const response = await fetch("/movie_list");
     const data = await response.json();
@@ -344,160 +295,225 @@ async function refreshUploadedMovieList(selectedFilename = null, applySelection 
 
     const movies = Array.isArray(data.movies) ? data.movies : [];
     uploadedMovies = movies;
-    uploadedMovieSelect.innerHTML = "";
+    _uploadedMovieSelect.innerHTML = "";
 
     const placeholder = document.createElement("option");
     placeholder.value = "";
     placeholder.textContent = movies.length > 0 ? "-- choose uploaded mp4 --" : "no uploaded mp4";
-    uploadedMovieSelect.appendChild(placeholder);
+    _uploadedMovieSelect.appendChild(placeholder);
 
     movies.forEach((filename) => {
       const option = document.createElement("option");
       option.value = filename;
       option.textContent = filename;
-      uploadedMovieSelect.appendChild(option);
+      _uploadedMovieSelect.appendChild(option);
     });
 
     if (applySelection && previousValue && movies.includes(previousValue)) {
-      uploadedMovieSelect.value = previousValue;
-      selectUploadedMovie(previousValue);
+      _uploadedMovieSelect.value = previousValue;
+      _selectUploadedMovie(previousValue);
     } else if (previousValue && movies.includes(previousValue)) {
-      uploadedMovieSelect.value = previousValue;
+      _uploadedMovieSelect.value = previousValue;
     }
     renderVideoAvailableMovies();
   } catch (error) {
-    setResultMessage(result, `movie list load failed: ${error}`, "error");
+    setResultMessage(_result, `movie list load failed: ${error}`, "error");
   }
 }
 
-uploadedMovieSelect.addEventListener("change", () => {
-  const filename = uploadedMovieSelect.value;
-  if (!filename) {
-    return;
+function updateSplitSeekPanel() {
+  if (uploadState.frameCount != null) {
+    document.getElementById("splitEnd").placeholder = String(uploadState.frameCount - 1);
+    _splitFrameSeekInput.max = String(uploadState.frameCount - 1);
+    _splitFrameSeekMax.textContent = `/ ${uploadState.frameCount - 1}`;
+    if (_splitPreview.src && currentFps != null) {
+      _splitFrameSeekArea.classList.remove("hidden");
+    }
+  } else {
+    _splitFrameSeekArea.classList.add("hidden");
+    _splitFrameSeekInput.value = 0;
+    _splitFrameSeekMax.textContent = "";
   }
-  setResultMessage(result, `Selected target: movies/${filename}`, "info");
-  selectUploadedMovie(filename);
-});
+  setElementDisabled(_deleteMovieButton, !Boolean(uploadState.filename));
+}
 
-uploadButton.addEventListener("click", async () => {
-  const file = movieInput.files[0];
-  if (!file) {
-    setResultMessage(result, "Please select an mp4 file.", "error");
-    clearInformation();
-    return;
-  }
+function setUploadButtonState(hasMovie, hasSplitImages) {
+  _mergeframeDisabledHint.classList.toggle("hidden", hasSplitImages);
+  _mosaicDisabledHint.classList.toggle("hidden", hasSplitImages);
+}
 
-  const formData = new FormData();
-  formData.append("movie", file);
+function setupUpload() {
+  _splitFrameSeekInput.addEventListener("input", () => {
+    if (currentFps == null || !_splitPreview.src) return;
+    const frame = Math.max(0, Number(_splitFrameSeekInput.value));
+    _splitPreview.currentTime = frame / currentFps;
+  });
 
-  try {
-    const response = await fetch("/upload", {
-      method: "POST",
-      body: formData
-    });
+  _preview.addEventListener("loadedmetadata", () => _updateVideoAspectClass(_preview));
+  _splitPreview.addEventListener("loadedmetadata", () => _updateVideoAspectClass(_splitPreview));
 
-    const data = await response.json();
-    if (!response.ok) {
-      setResultMessage(result, `Upload failed: ${data.detail || "unknown error"}`, "error");
-      clearInformation();
+  _splitPreview.addEventListener("timeupdate", _syncSplitFrameSeekFromVideo);
+  _splitPreview.addEventListener("seeked", _syncSplitFrameSeekFromVideo);
+
+  _splitSetStartButton.addEventListener("click", () => {
+    const frame = Math.max(0, Number(_splitFrameSeekInput.value));
+    document.getElementById("splitStart").value = String(frame);
+  });
+
+  _splitSetEndButton.addEventListener("click", () => {
+    const frame = Math.max(0, Number(_splitFrameSeekInput.value));
+    document.getElementById("splitEnd").value = String(frame);
+  });
+
+  _movieInput.addEventListener("change", () => {
+    const file = _movieInput.files[0];
+    if (_previewObjectUrl) {
+      URL.revokeObjectURL(_previewObjectUrl);
+      _previewObjectUrl = null;
+    }
+    if (!file) {
+      _preview.removeAttribute("src");
+      _preview.classList.add("hidden");
+      _previewPlaceholder.classList.remove("hidden");
+      _previewPlaceholder.textContent = "選択してください";
+      _setSplitPreviewSource(null);
+      _clearInformation();
       return;
     }
 
-    setResultMessage(result, `Uploaded: ${data.saved_path}`, "success");
-    applyUploadResponse(data);
-  } catch (error) {
-    setResultMessage(result, `Upload failed: ${error}`, "error");
-    clearInformation();
-  }
-});
+    _previewObjectUrl = URL.createObjectURL(file);
+    _preview.src = _previewObjectUrl;
+    _preview.classList.remove("hidden");
+    _previewPlaceholder.classList.add("hidden");
+    _preview.load();
+    _setSplitPreviewSource(null);
+    _clearInformation();
+  });
 
-gdriveImportButton.addEventListener("click", async () => {
-  const url = gdriveUrlInput.value.trim();
-  if (!url) {
-    setResultMessage(result, "Google Drive URL を入力してください。", "error");
-    return;
-  }
+  _uploadedMovieSelect.addEventListener("change", () => {
+    const filename = _uploadedMovieSelect.value;
+    if (!filename) {
+      return;
+    }
+    setResultMessage(_result, `Selected target: movies/${filename}`, "info");
+    _selectUploadedMovie(filename);
+  });
 
-  if (!(/[?&]usp=sharing/.test(url))) {
-    setResultMessage(result, "このリンクはダウンロードできません。共有設定を「リンクを知っている全員」に変更して取得した URL を使用してください。", "error");
-    return;
-  }
-
-  setElementDisabled(gdriveImportButton, true);
-  setResultMessage(result, "ダウンロード中...", "processing");
-  try {
-    const response = await fetch("/download_from_gdrive", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url })
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      setResultMessage(result, `Download failed: ${data.detail || "unknown error"}`, "error");
+  _uploadButton.addEventListener("click", async () => {
+    const file = _movieInput.files[0];
+    if (!file) {
+      setResultMessage(_result, "Please select an mp4 file.", "error");
+      _clearInformation();
       return;
     }
 
-    setResultMessage(result, `Downloaded: ${data.saved_path}`, "success");
-    gdriveUrlInput.value = "";
-    applyUploadResponse(data);
-  } catch (error) {
-    setResultMessage(result, `Download failed: ${error}`, "error");
-  } finally {
-    setElementDisabled(gdriveImportButton, false);
-  }
-});
+    const formData = new FormData();
+    formData.append("movie", file);
 
-deleteMovieButton.addEventListener("click", async () => {
-  const filename = uploadedMovieSelect.value || uploadState.filename;
-  if (!filename) {
-    setResultMessage(result, "削除対象の mp4 を選択してください。", "error");
-    return;
-  }
+    try {
+      const response = await fetch("/upload", {
+        method: "POST",
+        body: formData
+      });
 
-  const confirmed = window.confirm(`この操作は取り消せません。\n${filename} と関連する全ての画像を削除しますか？`);
-  if (!confirmed) {
-    setResultMessage(result, "削除をキャンセルしました。", "info");
-    return;
-  }
+      const data = await response.json();
+      if (!response.ok) {
+        setResultMessage(_result, `Upload failed: ${data.detail || "unknown error"}`, "error");
+        _clearInformation();
+        return;
+      }
 
-  setResultMessage(result, "削除中...", "processing");
+      setResultMessage(_result, `Uploaded: ${data.saved_path}`, "success");
+      _applyUploadResponse(data);
+    } catch (error) {
+      setResultMessage(_result, `Upload failed: ${error}`, "error");
+      _clearInformation();
+    }
+  });
 
-  try {
-    const response = await fetch(`/delete_movie?file=${encodeURIComponent(filename)}`);
-    const data = await response.json();
-    if (!response.ok) {
-      setResultMessage(result, `Delete failed: ${data.detail || "unknown error"}`, "error");
+  _gdriveImportButton.addEventListener("click", async () => {
+    const url = _gdriveUrlInput.value.trim();
+    if (!url) {
+      setResultMessage(_result, "Google Drive URL を入力してください。", "error");
       return;
     }
 
-    movieInfoRequestSerial += 1;
-    uploadState = { savedPath: null, frameCount: null, filename: null };
-    movieStatus = { splitImages: 0, mergedImages: 0, mosaicImages: 0 };
-    splitState = { outputDir: null, frameCount: null };
-    mergeframeState = { mergedDir: null, outputFrames: null };
-    mosaicState = { mosaicDir: null, outputFrames: null };
-    uploadedMovieSelect.value = "";
+    setElementDisabled(_gdriveImportButton, true);
+    setResultMessage(_result, "ダウンロード中...", "processing");
+    try {
+      const response = await fetch("/download_from_gdrive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      });
 
-    if (previewObjectUrl) {
-      URL.revokeObjectURL(previewObjectUrl);
-      previewObjectUrl = null;
+      const data = await response.json();
+      if (!response.ok) {
+        setResultMessage(_result, `Download failed: ${data.detail || "unknown error"}`, "error");
+        return;
+      }
+
+      setResultMessage(_result, `Downloaded: ${data.saved_path}`, "success");
+      _gdriveUrlInput.value = "";
+      _applyUploadResponse(data);
+    } catch (error) {
+      setResultMessage(_result, `Download failed: ${error}`, "error");
+    } finally {
+      setElementDisabled(_gdriveImportButton, false);
     }
-    preview.removeAttribute("src");
-    preview.classList.add("hidden");
-    previewPlaceholder.classList.remove("hidden");
-    previewPlaceholder.textContent = "選択してください";
-    setSplitPreviewSource(null);
-    clearInformation();
-    updateSplitPanel();
-    updateMosaicPanel();
-    updatePanelResultSummaries();
-    await refreshUploadedMovieList();
+  });
 
-    setResultMessage(result, `Deleted: ${filename}`, "success");
-  } catch (error) {
-    setResultMessage(result, `Delete failed: ${error}`, "error");
-  }
-});
+  deleteMovieButton.addEventListener("click", async () => {
+    const filename = _uploadedMovieSelect.value || uploadState.filename;
+    if (!filename) {
+      setResultMessage(_result, "削除対象の mp4 を選択してください。", "error");
+      return;
+    }
 
-refreshUploadedMovieList();
+    const confirmed = window.confirm(`この操作は取り消せません。\n${filename} と関連する全ての画像を削除しますか？`);
+    if (!confirmed) {
+      setResultMessage(_result, "削除をキャンセルしました。", "info");
+      return;
+    }
+
+    setResultMessage(_result, "削除中...", "processing");
+
+    try {
+      const response = await fetch(`/delete_movie?file=${encodeURIComponent(filename)}`);
+      const data = await response.json();
+      if (!response.ok) {
+        setResultMessage(_result, `Delete failed: ${data.detail || "unknown error"}`, "error");
+        return;
+      }
+
+      movieInfoRequestSerial += 1;
+      uploadState = { savedPath: null, frameCount: null, filename: null };
+      movieStatus = { splitImages: 0, mergedImages: 0, mosaicImages: 0 };
+      splitState = { outputDir: null, frameCount: null };
+      mergeframeState = { mergedDir: null, outputFrames: null };
+      mosaicState = { mosaicDir: null, outputFrames: null };
+      _uploadedMovieSelect.value = "";
+
+      if (_previewObjectUrl) {
+        URL.revokeObjectURL(_previewObjectUrl);
+        _previewObjectUrl = null;
+      }
+      _preview.removeAttribute("src");
+      _preview.classList.add("hidden");
+      _previewPlaceholder.classList.remove("hidden");
+      _previewPlaceholder.textContent = "選択してください";
+      _setSplitPreviewSource(null);
+      _clearInformation();
+      updateSplitPanel();
+      updateMosaicPanel();
+      updatePanelResultSummaries();
+      await _refreshUploadedMovieList();
+
+      setResultMessage(_result, `Deleted: ${filename}`, "success");
+    } catch (error) {
+      setResultMessage(_result, `Delete failed: ${error}`, "error");
+    }
+  });
+
+  _refreshUploadedMovieList();
+}

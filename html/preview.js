@@ -1,17 +1,17 @@
 // プレイリスト有無に応じてダウンロードボタンを切り替える
-function updatePreviewDownloadButton() {
-  const hasPlaylist = videoPlaylist.length > 0;
-  setElementDisabled(previewDownloadButton, !hasPlaylist);
-  previewDownloadButton.textContent = hasPlaylist
-    ? `download playlist (${videoPlaylist.length} movies)`
+function _updatePreviewDownloadButton() {
+  const hasPlaylist = _videoPlaylist.length > 0;
+  setElementDisabled(_previewDownloadButton, !hasPlaylist);
+  _previewDownloadButton.textContent = hasPlaylist
+    ? `download playlist (${_videoPlaylist.length} movies)`
     : "download playlist";
 }
 
 async function downloadPlaylistFrames() {
-  setElementDisabled(previewDownloadButton, true);
-  previewDownloadButton.textContent = "読み込み中...";
+  setElementDisabled(_previewDownloadButton, true);
+  _previewDownloadButton.textContent = "読み込み中...";
   try {
-    const frames = await loadAllPlaylistFrames();
+    const frames = await _loadAllPlaylistFrames();
     if (frames.length === 0) {
       alert("ダウンロード可能なフレームがありません（先に split を実行してください）");
       return;
@@ -35,105 +35,106 @@ async function downloadPlaylistFrames() {
   } catch (e) {
     alert(`ダウンロードエラー: ${e}`);
   } finally {
-    updatePreviewDownloadButton();
+    _updatePreviewDownloadButton();
   }
 }
 
 // --- preview & playlist (unified) ---
-const previewFrameImage = document.getElementById("previewFrameImage");
-const previewImagePlaceholder = document.getElementById("previewImagePlaceholder");
-const previewFrameInfo = document.getElementById("previewFrameInfo");
-const previewPlayInfo = document.getElementById("previewPlayInfo");
-const previewPlayButton = document.getElementById("previewPlayButton");
-const previewFramerateInput = document.getElementById("previewFramerate");
-const previewLoopCheckbox = document.getElementById("previewLoop");
-const videoAvailableListEl = document.getElementById("videoAvailableList");
-const videoPlaylistListEl = document.getElementById("videoPlaylistList");
+const _previewFrameImage = document.getElementById("previewFrameImage");
+const _previewImagePlaceholder = document.getElementById("previewImagePlaceholder");
+const _previewFrameInfo = document.getElementById("previewFrameInfo");
+const _previewPlayInfo = document.getElementById("previewPlayInfo");
+const _previewPlayButton = document.getElementById("previewPlayButton");
+const _previewFramerateInput = document.getElementById("previewFramerate");
+const _previewLoopCheckbox = document.getElementById("previewLoop");
+const _previewDownloadButton = document.getElementById("previewDownloadButton");
+const _videoAvailableListEl = document.getElementById("videoAvailableList");
+const _videoPlaylistListEl = document.getElementById("videoPlaylistList");
 
-let videoPlaylist = [];
-let videoPlaylistCurrentIndex = -1;
-let videoPlaylistAllFrames = [];
-let videoPlaylistFrameIndex = 0;
-let activePlayInterval = null;
-let playMode = null; // 'single' | 'playlist'
-let playlistLoading = false;
-const videoPlaylistFrameCounts = {}; // filename -> count
-const videoThumbnailCache = {};       // filename -> url | null
+let _videoPlaylist = [];
+let _videoPlaylistCurrentIndex = -1;
+let _videoPlaylistAllFrames = [];
+let _videoPlaylistFrameIndex = 0;
+let _activePlayInterval = null;
+let _playMode = null; // 'single' | 'playlist'
+let _playlistLoading = false;
+const _videoPlaylistFrameCounts = {}; // filename -> count
+const _videoThumbnailCache = {};       // filename -> url | null
 
 // タブ切り替え時: インターバルのみ停止、表示はそのまま
 function stopPreviewPlay() {
-  if (activePlayInterval !== null) {
-    clearInterval(activePlayInterval);
-    activePlayInterval = null;
+  if (_activePlayInterval !== null) {
+    clearInterval(_activePlayInterval);
+    _activePlayInterval = null;
   }
-  playMode = null;
-  playlistLoading = false;
-  videoPlaylistCurrentIndex = -1;
-  videoPlaylistAllFrames = [];
-  videoPlaylistFrameIndex = 0;
-  previewPlayInfo.textContent = "";
-  previewPlayButton.textContent = "▶ Play";
-  renderVideoPlaylist();
+  _playMode = null;
+  _playlistLoading = false;
+  _videoPlaylistCurrentIndex = -1;
+  _videoPlaylistAllFrames = [];
+  _videoPlaylistFrameIndex = 0;
+  _previewPlayInfo.textContent = "";
+  _previewPlayButton.textContent = "▶ Play";
+  _renderVideoPlaylist();
 }
 
 // 明示的停止 / プレイリスト変更時: インターバル停止 + プレースホルダー表示
-function stopPlay() {
+function _stopPlay() {
   stopPreviewPlay();
-  updatePreviewDownloadButton();
-  previewFrameImage.classList.add("hidden");
-  previewImagePlaceholder.classList.remove("hidden");
-  previewFrameInfo.textContent = "";
-  setElementDisabled(previewPlayButton, videoPlaylist.length === 0);
+  _updatePreviewDownloadButton();
+  _previewFrameImage.classList.add("hidden");
+  _previewImagePlaceholder.classList.remove("hidden");
+  _previewFrameInfo.textContent = "";
+  setElementDisabled(_previewPlayButton, _videoPlaylist.length === 0);
 }
 
-function showVideoPlaylistFrame(index) {
-  if (videoPlaylistAllFrames.length === 0) return;
-  videoPlaylistFrameIndex = ((index % videoPlaylistAllFrames.length) + videoPlaylistAllFrames.length) % videoPlaylistAllFrames.length;
-  const frame = videoPlaylistAllFrames[videoPlaylistFrameIndex];
-  previewFrameImage.src = frame.url;
-  previewFrameImage.classList.remove("hidden");
-  previewImagePlaceholder.classList.add("hidden");
-  if (frame.movieIndex !== videoPlaylistCurrentIndex) {
-    videoPlaylistCurrentIndex = frame.movieIndex;
-    renderVideoPlaylist();
+function _showVideoPlaylistFrame(index) {
+  if (_videoPlaylistAllFrames.length === 0) return;
+  _videoPlaylistFrameIndex = ((index % _videoPlaylistAllFrames.length) + _videoPlaylistAllFrames.length) % _videoPlaylistAllFrames.length;
+  const frame = _videoPlaylistAllFrames[_videoPlaylistFrameIndex];
+  _previewFrameImage.src = frame.url;
+  _previewFrameImage.classList.remove("hidden");
+  _previewImagePlaceholder.classList.add("hidden");
+  if (frame.movieIndex !== _videoPlaylistCurrentIndex) {
+    _videoPlaylistCurrentIndex = frame.movieIndex;
+    _renderVideoPlaylist();
   }
-  previewFrameInfo.textContent = `${videoPlaylistFrameIndex + 1} / ${videoPlaylistAllFrames.length}`;
-  previewPlayInfo.textContent = `Movie ${frame.movieIndex + 1}/${videoPlaylist.length}  ${frame.filename}`;
+  _previewFrameInfo.textContent = `${_videoPlaylistFrameIndex + 1} / ${_videoPlaylistAllFrames.length}`;
+  _previewPlayInfo.textContent = `Movie ${frame.movieIndex + 1}/${_videoPlaylist.length}  ${frame.filename}`;
 }
 
-async function startPlaylistPlay() {
-  if (playlistLoading) return;
-  playlistLoading = true;
-  playMode = 'playlist';
-  previewPlayInfo.textContent = "読み込み中...";
-  setElementDisabled(previewPlayButton, true);
+async function _startPlaylistPlay() {
+  if (_playlistLoading) return;
+  _playlistLoading = true;
+  _playMode = 'playlist';
+  _previewPlayInfo.textContent = "読み込み中...";
+  setElementDisabled(_previewPlayButton, true);
 
-  const frames = await loadAllPlaylistFrames();
-  playlistLoading = false;
+  const frames = await _loadAllPlaylistFrames();
+  _playlistLoading = false;
   if (frames.length === 0) {
-    previewPlayInfo.textContent = "再生可能なフレームがありません（先に split を実行してください）";
-    playMode = null;
-    setElementDisabled(previewPlayButton, false);
+    _previewPlayInfo.textContent = "再生可能なフレームがありません（先に split を実行してください）";
+    _playMode = null;
+    setElementDisabled(_previewPlayButton, false);
     return;
   }
-  videoPlaylistAllFrames = frames;
-  videoPlaylistFrameIndex = 0;
-  showVideoPlaylistFrame(0);
-  updatePreviewDownloadButton();
-  setElementDisabled(previewPlayButton, false);
-  previewPlayButton.textContent = "⏹ Stop";
+  _videoPlaylistAllFrames = frames;
+  _videoPlaylistFrameIndex = 0;
+  _showVideoPlaylistFrame(0);
+  _updatePreviewDownloadButton();
+  setElementDisabled(_previewPlayButton, false);
+  _previewPlayButton.textContent = "⏹ Stop";
 
-  const msec = Math.max(1, Number(previewFramerateInput.value) || 125);
-  activePlayInterval = setInterval(() => {
-    const next = videoPlaylistFrameIndex + 1;
-    if (next >= videoPlaylistAllFrames.length) {
-      if (previewLoopCheckbox.checked) {
-        showVideoPlaylistFrame(0);
+  const msec = Math.max(1, Number(_previewFramerateInput.value) || 125);
+  _activePlayInterval = setInterval(() => {
+    const next = _videoPlaylistFrameIndex + 1;
+    if (next >= _videoPlaylistAllFrames.length) {
+      if (_previewLoopCheckbox.checked) {
+        _showVideoPlaylistFrame(0);
       } else {
-        stopPlay();
+        _stopPlay();
       }
     } else {
-      showVideoPlaylistFrame(next);
+      _showVideoPlaylistFrame(next);
     }
   }, msec);
 }
@@ -145,60 +146,37 @@ async function autoSetPlaylistToCurrentMovie() {
   // フレームレートのデフォルト値を更新
   const mergeCount = Number(document.getElementById("mergeframeFrames")?.value) || 1;
   if (Number.isFinite(currentFps) && currentFps > 0) {
-    previewFramerateInput.value = String(Math.round((mergeCount * 1000) / currentFps));
+    _previewFramerateInput.value = String(Math.round((mergeCount * 1000) / currentFps));
   }
-  stopPlay();
+  _stopPlay();
   // プレイリストを現在の動画1本に置き換え
-  videoPlaylist = [filename];
-  delete videoThumbnailCache[filename]; // サムネイルを再取得させる
-  Object.keys(videoPlaylistFrameCounts).forEach(k => delete videoPlaylistFrameCounts[k]);
+  _videoPlaylist = [filename];
+  delete _videoThumbnailCache[filename]; // サムネイルを再取得させる
+  Object.keys(_videoPlaylistFrameCounts).forEach(k => delete _videoPlaylistFrameCounts[k]);
   renderVideoAvailableMovies();
-  renderVideoPlaylist();
-  getMovieBestDirAndCount(filename).then(info => {
-    videoPlaylistFrameCounts[filename] = info ? info.count : 0;
-    renderVideoPlaylist();
+  _renderVideoPlaylist();
+  _getMovieBestDirAndCount(filename).then(info => {
+    _videoPlaylistFrameCounts[filename] = info ? info.count : 0;
+    _renderVideoPlaylist();
   });
 }
 
-async function loadPreviewFramesAndShow() {
+async function _loadPreviewFramesAndShow() {
   await autoSetPlaylistToCurrentMovie();
 }
 
-previewPlayButton.addEventListener("click", async () => {
-  if (activePlayInterval !== null || playlistLoading) {
-    stopPlay();
-    return;
-  }
-  if (videoPlaylist.length > 0) {
-    await startPlaylistPlay();
-  }
-});
-
-previewFramerateInput.addEventListener("change", () => {
-  if (activePlayInterval !== null) {
-    clearInterval(activePlayInterval);
-    const msec = Math.max(1, Number(previewFramerateInput.value) || 125);
-    activePlayInterval = setInterval(() => {
-      const next = videoPlaylistFrameIndex + 1;
-      if (next >= videoPlaylistAllFrames.length) {
-        if (previewLoopCheckbox.checked) { showVideoPlaylistFrame(0); } else { stopPlay(); }
-      } else { showVideoPlaylistFrame(next); }
-    }, msec);
-  }
-});
-
 // --- playlist management ---
 function renderVideoAvailableMovies() {
-  videoAvailableListEl.innerHTML = "";
+  _videoAvailableListEl.innerHTML = "";
   if (uploadedMovies.length === 0) {
     const li = document.createElement("li");
     li.className = "text-xs text-slate-400";
     li.textContent = "アップロードされた動画がありません";
-    videoAvailableListEl.appendChild(li);
+    _videoAvailableListEl.appendChild(li);
     return;
   }
   uploadedMovies.forEach((filename) => {
-    const inPlaylist = videoPlaylist.includes(filename);
+    const inPlaylist = _videoPlaylist.includes(filename);
     const li = document.createElement("li");
     li.className = "flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-slate-100 select-none" + (inPlaylist ? " bg-slate-100" : "");
 
@@ -208,7 +186,7 @@ function renderVideoAvailableMovies() {
     thumb.className = "w-12 h-12 object-contain bg-slate-200 rounded";
     thumb.alt = "";
     thumbContainer.appendChild(thumb);
-    loadThumbnail(filename, thumb);
+    _loadThumbnail(filename, thumb);
     if (inPlaylist) {
       const badge = document.createElement("span");
       badge.className = "absolute bottom-0 right-0 text-emerald-600 font-bold text-xs leading-none drop-shadow-sm";
@@ -223,29 +201,29 @@ function renderVideoAvailableMovies() {
     li.appendChild(thumbContainer);
     li.appendChild(name);
     li.addEventListener("click", () => {
-      if (videoPlaylist.includes(filename)) {
-        removeFromVideoPlaylist(filename);
+      if (_videoPlaylist.includes(filename)) {
+        _removeFromVideoPlaylist(filename);
       } else {
-        addToVideoPlaylist(filename);
+        _addToVideoPlaylist(filename);
       }
     });
-    videoAvailableListEl.appendChild(li);
+    _videoAvailableListEl.appendChild(li);
   });
 }
 
-function renderVideoPlaylist() {
-  videoPlaylistListEl.innerHTML = "";
-  if (videoPlaylist.length === 0) {
+function _renderVideoPlaylist() {
+  _videoPlaylistListEl.innerHTML = "";
+  if (_videoPlaylist.length === 0) {
     const li = document.createElement("li");
     li.className = "text-xs text-slate-400";
     li.textContent = "プレイリストが空です";
-    videoPlaylistListEl.appendChild(li);
-    setElementDisabled(previewPlayButton, true);
-    updatePreviewDownloadButton();
+    _videoPlaylistListEl.appendChild(li);
+    setElementDisabled(_previewPlayButton, true);
+    _updatePreviewDownloadButton();
     return;
   }
-  videoPlaylist.forEach((filename, index) => {
-    const isPlaying = index === videoPlaylistCurrentIndex;
+  _videoPlaylist.forEach((filename, index) => {
+    const isPlaying = index === _videoPlaylistCurrentIndex;
     const li = document.createElement("li");
     li.className = "flex items-center gap-1 px-2 py-1 rounded text-xs" + (isPlaying ? " bg-slate-800 text-white" : " text-slate-700");
 
@@ -259,7 +237,7 @@ function renderVideoPlaylist() {
 
     const countBadge = document.createElement("span");
     countBadge.className = "shrink-0 text-xs" + (isPlaying ? " text-slate-300" : " text-slate-400");
-    const fc = videoPlaylistFrameCounts[filename];
+    const fc = _videoPlaylistFrameCounts[filename];
     countBadge.textContent = fc != null ? `(${fc}frames)` : "(…)";
 
     const upBtn = document.createElement("button");
@@ -267,20 +245,20 @@ function renderVideoPlaylist() {
     upBtn.textContent = "↑";
     upBtn.className = "shrink-0 px-1 rounded hover:bg-slate-200" + (isPlaying ? " text-slate-300 hover:text-slate-800" : " text-slate-400");
     upBtn.disabled = index === 0;
-    upBtn.addEventListener("click", (e) => { e.stopPropagation(); moveVideoPlaylistItem(index, -1); });
+    upBtn.addEventListener("click", (e) => { e.stopPropagation(); _moveVideoPlaylistItem(index, -1); });
 
     const downBtn = document.createElement("button");
     downBtn.type = "button";
     downBtn.textContent = "↓";
     downBtn.className = "shrink-0 px-1 rounded hover:bg-slate-200" + (isPlaying ? " text-slate-300 hover:text-slate-800" : " text-slate-400");
-    downBtn.disabled = index === videoPlaylist.length - 1;
-    downBtn.addEventListener("click", (e) => { e.stopPropagation(); moveVideoPlaylistItem(index, 1); });
+    downBtn.disabled = index === _videoPlaylist.length - 1;
+    downBtn.addEventListener("click", (e) => { e.stopPropagation(); _moveVideoPlaylistItem(index, 1); });
 
     const delBtn = document.createElement("button");
     delBtn.type = "button";
     delBtn.textContent = "✕";
     delBtn.className = "shrink-0 px-1 rounded" + (isPlaying ? " text-slate-300 hover:text-white" : " text-slate-400 hover:text-rose-600");
-    delBtn.addEventListener("click", (e) => { e.stopPropagation(); removeFromVideoPlaylist(filename); });
+    delBtn.addEventListener("click", (e) => { e.stopPropagation(); _removeFromVideoPlaylist(filename); });
 
     li.appendChild(num);
     li.appendChild(name);
@@ -288,59 +266,59 @@ function renderVideoPlaylist() {
     li.appendChild(upBtn);
     li.appendChild(downBtn);
     li.appendChild(delBtn);
-    videoPlaylistListEl.appendChild(li);
+    _videoPlaylistListEl.appendChild(li);
   });
-  setElementDisabled(previewPlayButton, false);
-  updatePreviewDownloadButton();
+  setElementDisabled(_previewPlayButton, false);
+  _updatePreviewDownloadButton();
 }
 
-function addToVideoPlaylist(filename) {
-  if (!videoPlaylist.includes(filename)) {
-    videoPlaylist.push(filename);
+function _addToVideoPlaylist(filename) {
+  if (!_videoPlaylist.includes(filename)) {
+    _videoPlaylist.push(filename);
     renderVideoAvailableMovies();
-    renderVideoPlaylist();
+    _renderVideoPlaylist();
     // フレーム数を非同期取得してキャッシュ後に再描画
-    getMovieBestDirAndCount(filename).then(info => {
-      videoPlaylistFrameCounts[filename] = info ? info.count : 0;
-      renderVideoPlaylist();
+    _getMovieBestDirAndCount(filename).then(info => {
+      _videoPlaylistFrameCounts[filename] = info ? info.count : 0;
+      _renderVideoPlaylist();
     });
   }
 }
 
-function removeFromVideoPlaylist(filename) {
-  const index = videoPlaylist.indexOf(filename);
+function _removeFromVideoPlaylist(filename) {
+  const index = _videoPlaylist.indexOf(filename);
   if (index === -1) return;
-  stopPlay();
-  videoPlaylist.splice(index, 1);
-  delete videoPlaylistFrameCounts[filename];
+  _stopPlay();
+  _videoPlaylist.splice(index, 1);
+  delete _videoPlaylistFrameCounts[filename];
   renderVideoAvailableMovies();
-  renderVideoPlaylist();
+  _renderVideoPlaylist();
 }
 
-function moveVideoPlaylistItem(index, dir) {
+function _moveVideoPlaylistItem(index, dir) {
   const newIndex = index + dir;
-  if (newIndex < 0 || newIndex >= videoPlaylist.length) return;
-  stopPlay();
-  [videoPlaylist[index], videoPlaylist[newIndex]] = [videoPlaylist[newIndex], videoPlaylist[index]];
-  renderVideoPlaylist();
+  if (newIndex < 0 || newIndex >= _videoPlaylist.length) return;
+  _stopPlay();
+  [_videoPlaylist[index], _videoPlaylist[newIndex]] = [_videoPlaylist[newIndex], _videoPlaylist[index]];
+  _renderVideoPlaylist();
 }
 
-async function loadThumbnail(filename, imgEl) {
-  if (videoThumbnailCache[filename] !== undefined) {
-    if (videoThumbnailCache[filename]) imgEl.src = videoThumbnailCache[filename];
+async function _loadThumbnail(filename, imgEl) {
+  if (_videoThumbnailCache[filename] !== undefined) {
+    if (_videoThumbnailCache[filename]) imgEl.src = _videoThumbnailCache[filename];
     return;
   }
-  const info = await getMovieBestDirAndCount(filename);
-  if (!info) { videoThumbnailCache[filename] = null; return; }
+  const info = await _getMovieBestDirAndCount(filename);
+  if (!info) { _videoThumbnailCache[filename] = null; return; }
   try {
     const resp = await fetch(`/frame_image?dir=${encodeURIComponent(info.dir)}&index=0`);
     const data = await resp.json();
-    videoThumbnailCache[filename] = data.frame_url || null;
+    _videoThumbnailCache[filename] = data.frame_url || null;
     if (data.frame_url) imgEl.src = data.frame_url;
-  } catch { videoThumbnailCache[filename] = null; }
+  } catch { _videoThumbnailCache[filename] = null; }
 }
 
-async function getMovieBestDirAndCount(filename) {  const base = filename.replace(/\.[^.]+$/, "");
+async function _getMovieBestDirAndCount(filename) {  const base = filename.replace(/\.[^.]+$/, "");
   try {
     const response = await fetch(`/movie_info?file=${encodeURIComponent(filename)}`);
     const data = await response.json();
@@ -355,12 +333,12 @@ async function getMovieBestDirAndCount(filename) {  const base = filename.replac
   } catch { return null; }
 }
 
-async function loadAllPlaylistFrames() {
+async function _loadAllPlaylistFrames() {
   const timestamp = Date.now();
   const allFrames = [];
-  for (let mi = 0; mi < videoPlaylist.length; mi++) {
-    const filename = videoPlaylist[mi];
-    const info = await getMovieBestDirAndCount(filename);
+  for (let mi = 0; mi < _videoPlaylist.length; mi++) {
+    const filename = _videoPlaylist[mi];
+    const info = await _getMovieBestDirAndCount(filename);
     if (!info) continue;
     const { dir, count } = info;
     try {
@@ -375,5 +353,30 @@ async function loadAllPlaylistFrames() {
   return allFrames;
 }
 
-renderVideoAvailableMovies();
-renderVideoPlaylist();
+function setupPreview() {
+  _previewPlayButton.addEventListener("click", async () => {
+    if (_activePlayInterval !== null || _playlistLoading) {
+      _stopPlay();
+      return;
+    }
+    if (_videoPlaylist.length > 0) {
+      await _startPlaylistPlay();
+    }
+  });
+
+  _previewFramerateInput.addEventListener("change", () => {
+    if (_activePlayInterval !== null) {
+      clearInterval(_activePlayInterval);
+      const msec = Math.max(1, Number(_previewFramerateInput.value) || 125);
+      _activePlayInterval = setInterval(() => {
+        const next = _videoPlaylistFrameIndex + 1;
+        if (next >= _videoPlaylistAllFrames.length) {
+          if (_previewLoopCheckbox.checked) { _showVideoPlaylistFrame(0); } else { _stopPlay(); }
+        } else { _showVideoPlaylistFrame(next); }
+      }, msec);
+    }
+  });
+
+  renderVideoAvailableMovies();
+  _renderVideoPlaylist();
+}

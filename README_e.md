@@ -1,4 +1,4 @@
-# うごイラ mp4 splitter
+# mp4 to jpeg images
 
 A browser-based tool for splitting mp4 files into frames, merging frames, applying mosaic effects, and downloading results as ZIP archives.
 Designed for local use — extracted JPG frames are stored in a dedicated folder on your machine.
@@ -25,6 +25,7 @@ Designed for local use — extracted JPG frames are stored in a dedicated folder
 
 ## TL;DR
 
+### bash (Linux / macOS / Git Bash / Termux)
 1. `./install.sh` — install dependencies
 2. `./run.sh` — start the server
 3. Open `http://localhost:8000/html/` in your browser
@@ -34,6 +35,13 @@ Designed for local use — extracted JPG frames are stored in a dedicated folder
 7. **mosaic** tab: apply pixelated mosaic to a selected area *(optional)*
 8. **preview** tab: playlist playback and ZIP download
 9. `./uninstall.sh` — uninstall
+
+### Windows
+1. `windows\install.bat` — install dependencies
+2. `windows\run.bat` — start the server
+3. Open `http://localhost:8000/html/` in your browser
+4. Steps 4–8 same as above
+9. `windows\uninstall.bat` — uninstall
 
 ---
 
@@ -95,8 +103,16 @@ chmod +x install.sh run.sh uninstall.sh
 
 ## Running the Server
 
+### bash
+
 ```bash
 ./run.sh
+```
+
+### Windows
+
+```cmd
+windows\run.bat
 ```
 
 Defaults:

@@ -1,63 +1,49 @@
 // --- mosaic パネル ---
-const mosaicExecuteButton = document.getElementById("mosaicExecuteButton");
-const mosaicResult = document.getElementById("mosaicResult");
-const mosaicDownloadButton = document.getElementById("mosaicDownloadButton");
-const mosaicPreviewWrap = document.getElementById("mosaicPreviewWrap");
-const mosaicPreviewFrame = document.getElementById("mosaicPreviewFrame");
-const mosaicPreviewCanvas = document.getElementById("mosaicPreviewCanvas");
-const mosaicPreviewMeta = document.getElementById("mosaicPreviewMeta");
-const mosaicPreviewContext = mosaicPreviewCanvas.getContext("2d");
-const mosaicPreviewImage = new Image();
-const mosaicOverlayInputs = [
-  document.getElementById("mosaicX1"),
-  document.getElementById("mosaicY1"),
-  document.getElementById("mosaicW1"),
-  document.getElementById("mosaicH1"),
-  document.getElementById("mosaicSize1"),
-];
-const mosaicX1Input = document.getElementById("mosaicX1");
-const mosaicY1Input = document.getElementById("mosaicY1");
-const mosaicW1Input = document.getElementById("mosaicW1");
-const mosaicH1Input = document.getElementById("mosaicH1");
-let mosaicPreviewFrameUrl = null;
-let mosaicPreviewRequestSerial = 0;
-let isMosaicDragging = false;
-let mosaicDragStart = null;
-let mosaicDragCurrent = null;
+const _mosaicExecuteButton = document.getElementById("mosaicExecuteButton");
+const _mosaicResult = document.getElementById("mosaicResult");
+const _mosaicDownloadButton = document.getElementById("mosaicDownloadButton");
+const _mosaicPreviewWrap = document.getElementById("mosaicPreviewWrap");
+const _mosaicPreviewFrame = document.getElementById("mosaicPreviewFrame");
+const _mosaicPreviewCanvas = document.getElementById("mosaicPreviewCanvas");
+const _mosaicPreviewMeta = document.getElementById("mosaicPreviewMeta");
+const _mosaicPreviewContext = _mosaicPreviewCanvas.getContext("2d");
+const _mosaicPreviewImage = new Image();
+const _mosaicEnable = document.getElementById("mosaicEnable");
+const _mosaicXInput = document.getElementById("mosaicX");
+const _mosaicYInput = document.getElementById("mosaicY");
+const _mosaicWInput = document.getElementById("mosaicW");
+const _mosaicHInput = document.getElementById("mosaicH");
+const _mosaicSizeInput = document.getElementById("mosaicSize");
+const _mosaicOverlayInputs = [_mosaicXInput, _mosaicYInput, _mosaicWInput, _mosaicHInput, _mosaicSizeInput];
+let _mosaicPreviewRequestSerial = 0;
+let _isMosaicDragging = false;
+let _mosaicDragStart = null;
+let _mosaicDragCurrent = null;
 
-mosaicDownloadButton.addEventListener("click", () => downloadImagesFromButton(mosaicDownloadButton));
-
-const previewDownloadButton = document.getElementById("previewDownloadButton");
-previewDownloadButton.addEventListener("click", async () => {
-  await downloadPlaylistFrames();
-});
-
-mosaicPreviewCanvas.style.touchAction = "none";
-
-function toFiniteNumber(inputId) {
-  const value = Number(document.getElementById(inputId).value);
+function _toFiniteNumber(input) {
+  const value = Number(input.value);
   return Number.isFinite(value) ? value : null;
 }
 
-function updateMosaicPreviewLayout() {
-  const isPortrait = mosaicPreviewImage.naturalHeight > mosaicPreviewImage.naturalWidth;
+function _updateMosaicPreviewLayout() {
+  const isPortrait = _mosaicPreviewImage.naturalHeight > _mosaicPreviewImage.naturalWidth;
 
-  mosaicPreviewFrame.classList.toggle("aspect-square", isPortrait);
-  mosaicPreviewCanvas.classList.toggle("w-full", !isPortrait);
-  mosaicPreviewCanvas.classList.toggle("h-auto", true);
-  mosaicPreviewCanvas.classList.toggle("max-w-full", isPortrait);
-  mosaicPreviewCanvas.classList.toggle("max-h-full", isPortrait);
-  mosaicPreviewCanvas.classList.toggle("w-auto", isPortrait);
-  mosaicPreviewCanvas.classList.toggle("mx-auto", isPortrait);
+  _mosaicPreviewFrame.classList.toggle("aspect-square", isPortrait);
+  _mosaicPreviewCanvas.classList.toggle("w-full", !isPortrait);
+  _mosaicPreviewCanvas.classList.toggle("h-auto", true);
+  _mosaicPreviewCanvas.classList.toggle("max-w-full", isPortrait);
+  _mosaicPreviewCanvas.classList.toggle("max-h-full", isPortrait);
+  _mosaicPreviewCanvas.classList.toggle("w-auto", isPortrait);
+  _mosaicPreviewCanvas.classList.toggle("mx-auto", isPortrait);
 }
 
-function drawOverlayRect(x, y, width, height, strokeStyle, fillStyle) {
-  if (!mosaicPreviewContext || !mosaicPreviewCanvas.width || !mosaicPreviewCanvas.height) return;
+function _drawOverlayRect(x, y, width, height, strokeStyle, fillStyle) {
+  if (!_mosaicPreviewContext || !_mosaicPreviewCanvas.width || !_mosaicPreviewCanvas.height) return;
   if (![x, y, width, height].every(Number.isFinite)) return;
   if (width <= 0 || height <= 0) return;
 
-  const canvasWidth = mosaicPreviewCanvas.width;
-  const canvasHeight = mosaicPreviewCanvas.height;
+  const canvasWidth = _mosaicPreviewCanvas.width;
+  const canvasHeight = _mosaicPreviewCanvas.height;
 
   const drawX = Math.max(0, Math.min(canvasWidth - 1, x));
   const drawY = Math.max(0, Math.min(canvasHeight - 1, y));
@@ -67,28 +53,28 @@ function drawOverlayRect(x, y, width, height, strokeStyle, fillStyle) {
   const drawHeight = Math.max(0, Math.min(height, maxHeight));
   if (drawWidth <= 0 || drawHeight <= 0) return;
 
-  mosaicPreviewContext.fillStyle = fillStyle;
-  mosaicPreviewContext.strokeStyle = strokeStyle;
-  mosaicPreviewContext.lineWidth = 2;
-  mosaicPreviewContext.fillRect(drawX, drawY, drawWidth, drawHeight);
-  mosaicPreviewContext.strokeRect(drawX, drawY, drawWidth, drawHeight);
+  _mosaicPreviewContext.fillStyle = fillStyle;
+  _mosaicPreviewContext.strokeStyle = strokeStyle;
+  _mosaicPreviewContext.lineWidth = 2;
+  _mosaicPreviewContext.fillRect(drawX, drawY, drawWidth, drawHeight);
+  _mosaicPreviewContext.strokeRect(drawX, drawY, drawWidth, drawHeight);
 }
 
-function getCanvasPointFromPointer(event) {
-  const rect = mosaicPreviewCanvas.getBoundingClientRect();
+function _getCanvasPointFromPointer(event) {
+  const rect = _mosaicPreviewCanvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return null;
 
-  const scaleX = mosaicPreviewCanvas.width / rect.width;
-  const scaleY = mosaicPreviewCanvas.height / rect.height;
+  const scaleX = _mosaicPreviewCanvas.width / rect.width;
+  const scaleY = _mosaicPreviewCanvas.height / rect.height;
   const x = (event.clientX - rect.left) * scaleX;
   const y = (event.clientY - rect.top) * scaleY;
 
-  const clampedX = Math.max(0, Math.min(mosaicPreviewCanvas.width - 1, x));
-  const clampedY = Math.max(0, Math.min(mosaicPreviewCanvas.height - 1, y));
+  const clampedX = Math.max(0, Math.min(_mosaicPreviewCanvas.width - 1, x));
+  const clampedY = Math.max(0, Math.min(_mosaicPreviewCanvas.height - 1, y));
   return { x: clampedX, y: clampedY };
 }
 
-function normalizeDragRect(startPoint, endPoint) {
+function _normalizeDragRect(startPoint, endPoint) {
   if (!startPoint || !endPoint) return null;
   const left = Math.min(startPoint.x, endPoint.x);
   const top = Math.min(startPoint.y, endPoint.y);
@@ -102,28 +88,28 @@ function normalizeDragRect(startPoint, endPoint) {
   return { x, y, width, height };
 }
 
-function renderMosaicPreviewOverlay() {
-  if (!mosaicPreviewContext || !mosaicPreviewFrameUrl) return;
-  if (!mosaicPreviewImage.complete || !mosaicPreviewImage.naturalWidth || !mosaicPreviewImage.naturalHeight) return;
+function _renderMosaicPreviewOverlay() {
+  if (!_mosaicPreviewContext || !mosaicPreviewFrameUrl) return;
+  if (!_mosaicPreviewImage.complete || !_mosaicPreviewImage.naturalWidth || !_mosaicPreviewImage.naturalHeight) return;
 
-  updateMosaicPreviewLayout();
-  mosaicPreviewCanvas.width = mosaicPreviewImage.naturalWidth;
-  mosaicPreviewCanvas.height = mosaicPreviewImage.naturalHeight;
-  mosaicPreviewContext.clearRect(0, 0, mosaicPreviewCanvas.width, mosaicPreviewCanvas.height);
-  mosaicPreviewContext.drawImage(mosaicPreviewImage, 0, 0);
+  _updateMosaicPreviewLayout();
+  _mosaicPreviewCanvas.width = _mosaicPreviewImage.naturalWidth;
+  _mosaicPreviewCanvas.height = _mosaicPreviewImage.naturalHeight;
+  _mosaicPreviewContext.clearRect(0, 0, _mosaicPreviewCanvas.width, _mosaicPreviewCanvas.height);
+  _mosaicPreviewContext.drawImage(_mosaicPreviewImage, 0, 0);
 
-  const x1 = toFiniteNumber("mosaicX1");
-  const y1 = toFiniteNumber("mosaicY1");
-  const w1 = toFiniteNumber("mosaicW1");
-  const h1 = toFiniteNumber("mosaicH1");
-  if (mosaicEnable1.checked && [x1, y1, w1, h1].every((value) => value != null)) {
-    drawOverlayRect(x1, y1, w1, h1, "rgba(239, 68, 68, 0.95)", "rgba(239, 68, 68, 0.20)");
+  const x1 = _toFiniteNumber(_mosaicXInput);
+  const y1 = _toFiniteNumber(_mosaicYInput);
+  const w1 = _toFiniteNumber(_mosaicWInput);
+  const h1 = _toFiniteNumber(_mosaicHInput);
+  if (_mosaicEnable.checked && [x1, y1, w1, h1].every((value) => value != null)) {
+    _drawOverlayRect(x1, y1, w1, h1, "rgba(239, 68, 68, 0.95)", "rgba(239, 68, 68, 0.20)");
   }
 
-  if (isMosaicDragging && mosaicDragStart && mosaicDragCurrent) {
-    const draggingRect = normalizeDragRect(mosaicDragStart, mosaicDragCurrent);
+  if (_isMosaicDragging && _mosaicDragStart && _mosaicDragCurrent) {
+    const draggingRect = _normalizeDragRect(_mosaicDragStart, _mosaicDragCurrent);
     if (draggingRect) {
-      drawOverlayRect(
+      _drawOverlayRect(
         draggingRect.x,
         draggingRect.y,
         draggingRect.width,
@@ -135,205 +121,229 @@ function renderMosaicPreviewOverlay() {
   }
 }
 
-function canStartMosaicDrag() {
+function _canStartMosaicDrag() {
   return Boolean(
-    mosaicEnable1.checked
-    && !mosaicEnable1.disabled
+    _mosaicEnable.checked
+    && !_mosaicEnable.disabled
     && mosaicPreviewFrameUrl
-    && mosaicPreviewImage.complete
-    && mosaicPreviewImage.naturalWidth > 0
-    && mosaicPreviewImage.naturalHeight > 0
-    && !mosaicX1Input.disabled
-    && !mosaicY1Input.disabled
-    && !mosaicW1Input.disabled
-    && !mosaicH1Input.disabled
+    && _mosaicPreviewImage.complete
+    && _mosaicPreviewImage.naturalWidth > 0
+    && _mosaicPreviewImage.naturalHeight > 0
+    && !_mosaicXInput.disabled
+    && !_mosaicYInput.disabled
+    && !_mosaicWInput.disabled
+    && !_mosaicHInput.disabled
   );
 }
 
-mosaicPreviewCanvas.addEventListener("pointerdown", (event) => {
-  if (!canStartMosaicDrag()) return;
+function _finalizeMosaicDrag() {
+  if (!_isMosaicDragging) return;
 
-  const point = getCanvasPointFromPointer(event);
-  if (!point) return;
-
-  isMosaicDragging = true;
-  mosaicDragStart = point;
-  mosaicDragCurrent = point;
-  mosaicPreviewCanvas.setPointerCapture(event.pointerId);
-  renderMosaicPreviewOverlay();
-});
-
-mosaicPreviewCanvas.addEventListener("pointermove", (event) => {
-  if (!isMosaicDragging) return;
-
-  const point = getCanvasPointFromPointer(event);
-  if (!point) return;
-
-  mosaicDragCurrent = point;
-  renderMosaicPreviewOverlay();
-});
-
-function finalizeMosaicDrag() {
-  if (!isMosaicDragging) return;
-
-  const draggingRect = normalizeDragRect(mosaicDragStart, mosaicDragCurrent);
-  isMosaicDragging = false;
-  mosaicDragStart = null;
-  mosaicDragCurrent = null;
+  const draggingRect = _normalizeDragRect(_mosaicDragStart, _mosaicDragCurrent);
+  _isMosaicDragging = false;
+  _mosaicDragStart = null;
+  _mosaicDragCurrent = null;
 
   if (draggingRect) {
-    mosaicX1Input.value = String(draggingRect.x);
-    mosaicY1Input.value = String(draggingRect.y);
-    mosaicW1Input.value = String(draggingRect.width);
-    mosaicH1Input.value = String(draggingRect.height);
+    _mosaicXInput.value = String(draggingRect.x);
+    _mosaicYInput.value = String(draggingRect.y);
+    _mosaicWInput.value = String(draggingRect.width);
+    _mosaicHInput.value = String(draggingRect.height);
   }
 
-  renderMosaicPreviewOverlay();
+  _renderMosaicPreviewOverlay();
 }
 
-mosaicPreviewCanvas.addEventListener("pointerup", (event) => {
-  if (isMosaicDragging && mosaicPreviewCanvas.hasPointerCapture(event.pointerId)) {
-    mosaicPreviewCanvas.releasePointerCapture(event.pointerId);
-  }
-  finalizeMosaicDrag();
-});
-
-mosaicPreviewCanvas.addEventListener("pointercancel", (event) => {
-  if (isMosaicDragging && mosaicPreviewCanvas.hasPointerCapture(event.pointerId)) {
-    mosaicPreviewCanvas.releasePointerCapture(event.pointerId);
-  }
-  finalizeMosaicDrag();
-});
-
-async function refreshMosaicPreview() {
+async function _refreshMosaicPreview() {
   const targetDir = getMosaicTargetDir();
   const dirParam = buildDirParam(targetDir);
 
   if (!dirParam) {
-    mosaicPreviewWrap.classList.add("hidden");
-    mosaicPreviewMeta.textContent = "";
+    _mosaicPreviewWrap.classList.add("hidden");
+    _mosaicPreviewMeta.textContent = "";
     mosaicPreviewFrameUrl = null;
     return;
   }
 
-  const serial = ++mosaicPreviewRequestSerial;
-  mosaicPreviewMeta.textContent = "プレビュー読み込み中...";
-  mosaicPreviewWrap.classList.remove("hidden");
+  const serial = ++_mosaicPreviewRequestSerial;
+  _mosaicPreviewMeta.textContent = "プレビュー読み込み中...";
+  _mosaicPreviewWrap.classList.remove("hidden");
 
   try {
     const frameCount = Number(getMosaicImageCount());
     const index = Number.isFinite(frameCount) && frameCount > 0 ? Math.floor(frameCount / 2) : 0;
     const response = await fetch(`/frame_image?dir=${encodeURIComponent(dirParam)}&index=${index}`);
     const data = await response.json();
-    if (serial !== mosaicPreviewRequestSerial) return;
+    if (serial !== _mosaicPreviewRequestSerial) return;
     if (!response.ok) {
       throw new Error(data.detail || "preview load failed");
     }
 
     const frameUrlWithBust = `${data.frame_url}?v=${Date.now()}`;
     mosaicPreviewFrameUrl = frameUrlWithBust;
-    mosaicPreviewImage.onload = () => {
-      if (serial !== mosaicPreviewRequestSerial) return;
-      renderMosaicPreviewOverlay();
+    _mosaicPreviewImage.onload = () => {
+      if (serial !== _mosaicPreviewRequestSerial) return;
+      _renderMosaicPreviewOverlay();
     };
-    mosaicPreviewImage.src = frameUrlWithBust;
-    mosaicPreviewMeta.textContent = `${data.frame_name} (${data.width}x${data.height}, total ${data.frame_count} frames)`;
+    _mosaicPreviewImage.src = frameUrlWithBust;
+    _mosaicPreviewMeta.textContent = `${data.frame_name} (${data.width}x${data.height}, total ${data.frame_count} frames)`;
   } catch (error) {
-    if (serial !== mosaicPreviewRequestSerial) return;
+    if (serial !== _mosaicPreviewRequestSerial) return;
     mosaicPreviewFrameUrl = null;
-    if (mosaicPreviewContext) {
-      mosaicPreviewContext.clearRect(0, 0, mosaicPreviewCanvas.width, mosaicPreviewCanvas.height);
+    if (_mosaicPreviewContext) {
+      _mosaicPreviewContext.clearRect(0, 0, _mosaicPreviewCanvas.width, _mosaicPreviewCanvas.height);
     }
-    mosaicPreviewMeta.textContent = `プレビュー取得エラー: ${error}`;
+    _mosaicPreviewMeta.textContent = `プレビュー取得エラー: ${error}`;
   }
 }
 
-mosaicOverlayInputs.forEach((input) => {
-  input.addEventListener("input", renderMosaicPreviewOverlay);
-});
+function updateMosaicRegionInputAvailability() {
+  const panelEnabled = _hasSplitImages();
+  const region1Enabled = panelEnabled && _mosaicEnable.checked;
 
-[mosaicEnable1].forEach((checkbox) => {
-  checkbox.addEventListener("change", () => {
-    updateMosaicRegionInputAvailability();
-    renderMosaicPreviewOverlay();
+  _mosaicOverlayInputs.forEach((element) => setElementDisabled(element, !region1Enabled));
+
+  setElementDisabled(_mosaicEnable, !panelEnabled);
+}
+
+function setMosaicButtonState(hasMovie, hasSplitImages) {
+  setElementDisabled(_mosaicExecuteButton, !hasSplitImages);
+  updateMosaicRegionInputAvailability();
+  if (!hasSplitImages) {
+    _mosaicPreviewWrap.classList.add("hidden");
+    _mosaicPreviewMeta.textContent = "";
+  }
+}
+
+function setupMosaic() {
+  _mosaicDownloadButton.addEventListener("click", () => downloadImagesFromButton(_mosaicDownloadButton));
+
+  _mosaicPreviewCanvas.style.touchAction = "none";
+
+  _mosaicPreviewCanvas.addEventListener("pointerdown", (event) => {
+    if (!_canStartMosaicDrag()) return;
+
+    const point = _getCanvasPointFromPointer(event);
+    if (!point) return;
+
+    _isMosaicDragging = true;
+    _mosaicDragStart = point;
+    _mosaicDragCurrent = point;
+    _mosaicPreviewCanvas.setPointerCapture(event.pointerId);
+    _renderMosaicPreviewOverlay();
   });
-});
 
-const originalActivateTab = activateTab;
-activateTab = function(name) {
-  const prevActiveBtn = document.querySelector(".tab-btn.bg-slate-800");
-  const prevTab = prevActiveBtn?.dataset.tab ?? null;
-  originalActivateTab(name);
-  if (name === "mosaic") {
-    refreshMosaicPreview();
-  }
-  if (prevTab === "preview" && name !== "preview") {
-    stopPreviewPlay();
-  }
-};
+  _mosaicPreviewCanvas.addEventListener("pointermove", (event) => {
+    if (!_isMosaicDragging) return;
 
-mosaicExecuteButton.addEventListener("click", async () => {
-  if (!uploadState.filename) {
-    setResultMessage(mosaicResult, "先に upload タブでファイルをアップロードしてください。", "error");
-    return;
-  }
-  if (!splitState.outputDir) {
-    setResultMessage(mosaicResult, "先に split タブで JPEG を展開してください。", "error");
-    return;
-  }
+    const point = _getCanvasPointFromPointer(event);
+    if (!point) return;
 
-  const targetDir = getMosaicTargetDir();
-  if (!targetDir) {
-    setResultMessage(mosaicResult, "対象ディレクトリがありません。先に split を実行してください。", "error");
-    return;
-  }
-
-  const dirParam = buildDirParam(targetDir);
-  if (!dirParam) {
-    setResultMessage(mosaicResult, "対象ディレクトリの解決に失敗しました。", "error");
-    return;
-  }
-
-  const params = new URLSearchParams({
-    dir: dirParam,
-    x1: String(Number(document.getElementById("mosaicX1").value)),
-    y1: String(Number(document.getElementById("mosaicY1").value)),
-    w1: String(Number(document.getElementById("mosaicW1").value)),
-    h1: String(Number(document.getElementById("mosaicH1").value)),
-    size1: mosaicEnable1.checked ? String(Number(document.getElementById("mosaicSize1").value)) : "1",
+    _mosaicDragCurrent = point;
+    _renderMosaicPreviewOverlay();
   });
-  setResultMessage(mosaicResult, `実行中... ${formatFrameProgress(0, null)}`, "processing");
 
-  try {
-    const response = await fetch(`/mosaic?${params}`);
-    const startData = await response.json();
-    if (!response.ok) {
-      setResultMessage(mosaicResult, `Error: ${startData.detail || "unknown error"}`, "error");
+  _mosaicPreviewCanvas.addEventListener("pointerup", (event) => {
+    if (_isMosaicDragging && _mosaicPreviewCanvas.hasPointerCapture(event.pointerId)) {
+      _mosaicPreviewCanvas.releasePointerCapture(event.pointerId);
+    }
+    _finalizeMosaicDrag();
+  });
+
+  _mosaicPreviewCanvas.addEventListener("pointercancel", (event) => {
+    if (_isMosaicDragging && _mosaicPreviewCanvas.hasPointerCapture(event.pointerId)) {
+      _mosaicPreviewCanvas.releasePointerCapture(event.pointerId);
+    }
+    _finalizeMosaicDrag();
+  });
+
+  _mosaicOverlayInputs.forEach((input) => {
+    input.addEventListener("input", _renderMosaicPreviewOverlay);
+  });
+
+  [_mosaicEnable].forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      updateMosaicRegionInputAvailability();
+      _renderMosaicPreviewOverlay();
+    });
+  });
+
+  const _originalActivateTab = activateTab;
+  activateTab = function(name) {
+    const prevActiveBtn = document.querySelector(".tab-btn.bg-slate-800");
+    const prevTab = prevActiveBtn?.dataset.tab ?? null;
+    _originalActivateTab(name);
+    if (name === "mosaic") {
+      _refreshMosaicPreview();
+    }
+    if (prevTab === "preview" && name !== "preview") {
+      stopPreviewPlay();
+    }
+  };
+
+  _mosaicExecuteButton.addEventListener("click", async () => {
+    if (!uploadState.filename) {
+      setResultMessage(_mosaicResult, "先に upload タブでファイルをアップロードしてください。", "error");
       return;
     }
-    pollJob(startData.job_id, mosaicResult,
-      (result) => {
-        mosaicState = {
-          mosaicDir: result.mosaic_dir,
-          outputFrames: result.output_frames,
-        };
-        movieStatus.mosaicImages = Number.isFinite(Number(result.output_frames)) ? Number(result.output_frames) : 0;
-        updateMosaicPanel();
-        refreshMosaicPreview();
-        setResultMessage(
-          mosaicResult,
-          `完了: ${formatFrameProgress(result.done, result.total)} → ${result.mosaic_dir}`,
-          "success"
-        );
-        updatePanelResultSummaries();
-        autoSetPlaylistToCurrentMovie();
-      },
-      (detail) => setResultMessage(mosaicResult, `Error: ${detail}`, "error")
-    );
-  } catch (error) {
-    setResultMessage(mosaicResult, `Error: ${error}`, "error");
-  }
-});
+    if (!splitState.outputDir) {
+      setResultMessage(_mosaicResult, "先に split タブで JPEG を展開してください。", "error");
+      return;
+    }
 
-updateSplitPanel();
-updatePanelResultSummaries();
+    const targetDir = getMosaicTargetDir();
+    if (!targetDir) {
+      setResultMessage(_mosaicResult, "対象ディレクトリがありません。先に split を実行してください。", "error");
+      return;
+    }
+
+    const dirParam = buildDirParam(targetDir);
+    if (!dirParam) {
+      setResultMessage(_mosaicResult, "対象ディレクトリの解決に失敗しました。", "error");
+      return;
+    }
+
+    const params = new URLSearchParams({
+      dir: dirParam,
+      x1: String(Number(_mosaicXInput.value)),
+      y1: String(Number(_mosaicYInput.value)),
+      w1: String(Number(_mosaicWInput.value)),
+      h1: String(Number(_mosaicHInput.value)),
+      size1: _mosaicEnable.checked ? String(Number(_mosaicSizeInput.value)) : "1",
+    });
+    setResultMessage(_mosaicResult, `実行中... ${formatFrameProgress(0, null)}`, "processing");
+
+    try {
+      const response = await fetch(`/mosaic?${params}`);
+      const startData = await response.json();
+      if (!response.ok) {
+        setResultMessage(_mosaicResult, `Error: ${startData.detail || "unknown error"}`, "error");
+        return;
+      }
+      pollJob(startData.job_id, _mosaicResult,
+        (result) => {
+          mosaicState = {
+            mosaicDir: result.mosaic_dir,
+            outputFrames: result.output_frames,
+          };
+          movieStatus.mosaicImages = Number.isFinite(Number(result.output_frames)) ? Number(result.output_frames) : 0;
+          updateMosaicPanel();
+          _refreshMosaicPreview();
+          setResultMessage(
+            _mosaicResult,
+            `完了: ${formatFrameProgress(result.done, result.total)} → ${result.mosaic_dir}`,
+            "success"
+          );
+          updatePanelResultSummaries();
+          autoSetPlaylistToCurrentMovie();
+        },
+        (detail) => setResultMessage(_mosaicResult, `Error: ${detail}`, "error")
+      );
+    } catch (error) {
+      setResultMessage(_mosaicResult, `Error: ${error}`, "error");
+    }
+  });
+
+  updateSplitPanel();
+  updatePanelResultSummaries();
+}

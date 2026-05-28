@@ -1,11 +1,15 @@
-const RESULT_PANEL_BASE = "rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm";
-const RESULT_TONE_CLASS = {
+// --- 共通ステートとユーティリティ関数 ---
+// 各タブでの処理結果や状態を共有するためのステートと、UI更新のためのユーティリティ関数を定義
+
+const _RESULT_PANEL_BASE = "rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm";
+const _RESULT_TONE_CLASS = {
   neutral: "text-slate-700",
   info: "text-slate-600",
   processing: "text-slate-500",
   success: "text-emerald-700",
   error: "text-rose-600",
 };
+
 
 function setResultMessage(element, message, tone = "neutral") {
   if (!element) return;
@@ -14,7 +18,7 @@ function setResultMessage(element, message, tone = "neutral") {
 
   if (isPanelFormat) {
     const messageElement = element.querySelector('[data-role="message"]');
-    const toneClass = RESULT_TONE_CLASS[tone] || RESULT_TONE_CLASS.neutral;
+    const toneClass = _RESULT_TONE_CLASS[tone] || _RESULT_TONE_CLASS.neutral;
     if (!messageElement) return;
 
     if (!text) {
@@ -32,13 +36,13 @@ function setResultMessage(element, message, tone = "neutral") {
 
   if (!text) {
     element.textContent = "";
-    element.className = `hidden ${RESULT_PANEL_BASE}`;
+    element.className = `hidden ${_RESULT_PANEL_BASE}`;
     return;
   }
 
-  const toneClass = RESULT_TONE_CLASS[tone] || RESULT_TONE_CLASS.neutral;
+  const toneClass = _RESULT_TONE_CLASS[tone] || _RESULT_TONE_CLASS.neutral;
   element.textContent = text;
-  element.className = `${RESULT_PANEL_BASE} ${toneClass}`;
+  element.className = `${_RESULT_PANEL_BASE} ${toneClass}`;
 }
 
 // upload / split 結果の共有ステート
@@ -48,9 +52,12 @@ let mergeframeState = { mergedDir: null, outputFrames: null };
 let mosaicState = { mosaicDir: null, outputFrames: null };
 let movieStatus = { splitImages: 0, mergedImages: 0, mosaicImages: 0 };
 let movieInfoRequestSerial = 0;
+let currentFps = null;
+let mosaicPreviewFrameUrl = null;
 let uploadedMovies = [];
+let activeTabName = "upload";
 
-function getBaseFramesDir(filename) {
+function _getBaseFramesDir(filename) {
   if (!filename) return null;
   return `images/${filename.replace(/\.[^.]+$/, "")}_frames`;
 }
@@ -62,7 +69,7 @@ function updatePanelResultSummaries() {
   const splitDownloadButton = document.getElementById("splitDownloadButton");
   const mergeframeDownloadButton = document.getElementById("mergeframeDownloadButton");
   const mosaicDownloadButton = document.getElementById("mosaicDownloadButton");
-  const baseFramesDir = getBaseFramesDir(uploadState.filename);
+  const baseFramesDir = _getBaseFramesDir(uploadState.filename);
 
   const applyDownloadButtonState = (button, dirPath, count, label) => {
     if (!button) return;
@@ -124,7 +131,7 @@ function getMosaicImageCount() {
   return mosaicState.outputFrames ?? mergeframeState.outputFrames ?? splitState.frameCount;
 }
 
-function hasSplitImages() {
+function _hasSplitImages() {
   return Number.isFinite(splitState.frameCount) && splitState.frameCount > 0 && Boolean(splitState.outputDir);
 }
 
@@ -136,46 +143,23 @@ function setElementDisabled(element, disabled) {
   element.classList.toggle("cursor-not-allowed", disabled);
 }
 
-function updateMosaicRegionInputAvailability() {
-  const panelEnabled = hasSplitImages();
-  const region1Enabled = panelEnabled && mosaicEnable1.checked;
-
-  [
-    document.getElementById("mosaicX1"),
-    document.getElementById("mosaicY1"),
-    document.getElementById("mosaicW1"),
-    document.getElementById("mosaicH1"),
-    document.getElementById("mosaicSize1"),
-  ].forEach((element) => setElementDisabled(element, !region1Enabled));
-
-  setElementDisabled(mosaicEnable1, !panelEnabled);
-}
-
-function updateProcessingAvailability() {
+function _updateProcessingAvailability() {
   const hasMovie = Boolean(uploadState.filename);
-  const enabled = hasSplitImages();
+  const enabled = _hasSplitImages();
 
-  setElementDisabled(splitTabButton, !hasMovie);
-  setElementDisabled(mergeframeTabButton, !enabled);
-  setElementDisabled(mosaicTabButton, !enabled);
-  setElementDisabled(mergeframeFrames, !enabled);
-  setElementDisabled(mergeframeExecuteButton, !enabled);
-  setElementDisabled(mergeframeDeleteButton, !enabled);
-  setElementDisabled(mosaicExecuteButton, !enabled);
-  updateMosaicRegionInputAvailability();
-  mergeframeDisabledHint.classList.toggle("hidden", enabled);
-  mosaicDisabledHint.classList.toggle("hidden", enabled);
+  setTabsButtonState(hasMovie, enabled);
+  setMergeframeButtonState(hasMovie, enabled);
+  setMosaicButtonState(hasMovie, enabled);
+  setUploadButtonState(hasMovie, enabled);
 
   if (!enabled) {
     if (document.getElementById("panel-mergeframe").classList.contains("hidden") === false || document.getElementById("panel-mosaic").classList.contains("hidden") === false) {
       activateTab("split");
     }
-    mosaicPreviewWrap.classList.add("hidden");
-    mosaicPreviewMeta.textContent = "";
     mosaicPreviewFrameUrl = null;
   }
 
-  const activeTab = document.querySelector(`.tab-btn.${DESKTOP_ACTIVE.split(" ")[0]}`)?.dataset.tab;
+  const activeTab = activeTabName;
   if ((activeTab === "mergeframe" || activeTab === "mosaic") && !enabled) {
     activateTab("split");
   } else if (activeTab === "split" && !hasMovie) {
@@ -234,28 +218,15 @@ function pollJob(jobId, resultEl, onCompleted, onError) {
 function updateSplitPanel() {
   document.getElementById("splitFilePath").textContent = uploadState.savedPath ?? "-";
   document.getElementById("splitFrameCount").textContent = uploadState.frameCount ?? "-";
-  if (uploadState.frameCount != null) {
-    document.getElementById("splitEnd").placeholder = String(uploadState.frameCount - 1);
-    splitFrameSeekInput.max = String(uploadState.frameCount - 1);
-    splitFrameSeekMax.textContent = `/ ${uploadState.frameCount - 1}`;
-    if (splitPreview.src && currentFps != null) {
-      splitFrameSeekArea.classList.remove("hidden");
-    }
-  } else {
-    splitFrameSeekArea.classList.add("hidden");
-    splitFrameSeekInput.value = 0;
-    splitFrameSeekMax.textContent = "";
-  }
+  updateSplitSeekPanel();
   document.getElementById("mergeframeMoviePath").textContent = uploadState.savedPath ?? "-";
   document.getElementById("mergeframeImageCount").textContent = splitState.frameCount ?? "-";
   document.getElementById("mosaicMoviePath").textContent = getMosaicTargetDir() ?? "-";
   document.getElementById("mosaicImageCount").textContent = getMosaicImageCount() ?? "-";
-  const hasMovie = Boolean(uploadState.filename);
-  setElementDisabled(deleteMovieButton, !hasMovie);
-  updateProcessingAvailability();
+  _updateProcessingAvailability();
 }
 
-function updateMergeframePanel() {
+function _updateMergeframePanel() {
   document.getElementById("mergeframeMoviePath").textContent = uploadState.savedPath ?? "-";
   document.getElementById("mergeframeImageCount").textContent = splitState.frameCount ?? "-";
   document.getElementById("mosaicMoviePath").textContent = getMosaicTargetDir() ?? "-";
