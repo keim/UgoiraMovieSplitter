@@ -364,6 +364,8 @@ function setupPreview() {
     }
   });
 
+  _previewDownloadButton.addEventListener("click", downloadPlaylistFrames);
+
   _previewFramerateInput.addEventListener("change", () => {
     if (_activePlayInterval !== null) {
       clearInterval(_activePlayInterval);
