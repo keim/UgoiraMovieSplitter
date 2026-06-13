@@ -1,3 +1,6 @@
+movies/
+images/
+
 # Python
 __pycache__/
 *.py[cod]
